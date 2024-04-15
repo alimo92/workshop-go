@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  workshop:
+    build:
+      context: "../../"
+      dockerfile: "deploy/docker/Dockerfile"
+    container_name: "workshop"
+    profiles:
+      - app
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    ports:
+    - "8080:8080"
+    environment:
+    # Override default environment variables set in .env file
+      - "POSTGRES_HOST=users-postgres"
+
+  postgres:
+    image: "postgres:16.0-alpine"
+    container_name: "users-postgres"
+    ports:
+    - "5433:5432"
+    environment:
+    - "POSTGRES_PASSWORD=password"
+    - "POSTGRES_USER=user"
+    - "POSTGRES_DB=users"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", user, "-d", "users"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 5s  
